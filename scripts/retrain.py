@@ -840,7 +840,7 @@ def prepare_file_system():
   return
 
 
-def create_model_info(architecture):
+def create_model_info(architecture, model_download_url):
   """Given the name of a model architecture, returns information about it.
 
   There are different base image recognition pretrained models that can be
@@ -902,8 +902,8 @@ def create_model_info(architecture):
             architecture)
         return None
       is_quantized = True
-    data_url = 'http://download.tensorflow.org/models/mobilenet_v1_'
-    data_url += version_string + '_' + size_string + '_frozen.tgz'
+    data_url = model_download_url + 'mobilenet_v1_' + version_string + '_' + size_string + '_frozen.tgz'
+    print(data_url)
     bottleneck_tensor_name = 'MobilenetV1/Predictions/Reshape:0'
     bottleneck_tensor_size = 1001
     input_width = int(size_string)
@@ -973,7 +973,7 @@ def main(_):
   prepare_file_system()
 
   # Gather information about the model architecture we'll be using.
-  model_info = create_model_info(FLAGS.architecture)
+  model_info = create_model_info(FLAGS.architecture, FLAGS.model_download_url)
   if not model_info:
     tf.logging.error('Did not recognize architecture flag')
     return -1
@@ -1322,5 +1322,13 @@ if __name__ == '__main__':
       takes 128x128 images. See https://research.googleblog.com/2017/06/mobilenets-open-source-models-for.html
       for more information on Mobilenet.\
       """)
+  parser.add_argument(
+      '--model_download_url',
+      type=str,
+      default='http://download.tensorflow.org/models/',
+      help="""\
+      Url to download models.\
+      """
+  )
   FLAGS, unparsed = parser.parse_known_args()
   tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
