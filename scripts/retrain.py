@@ -270,7 +270,13 @@ def create_model_graph(model_info):
     manipulating.
   """
   with tf.Graph().as_default() as graph:
-    model_path = os.path.join(FLAGS.model_dir, model_info['model_file_name'])
+    if(FLAGS.model_file_name):
+      file_name = FLAGS.model_file_name
+    else:
+      file_name = model_info['model_file_name']
+
+    model_path = os.path.join(FLAGS.model_dir, file_name)
+    print(model_path)
     with gfile.FastGFile(model_path, 'rb') as f:
       graph_def = tf.GraphDef()
       graph_def.ParseFromString(f.read())
@@ -320,10 +326,12 @@ def maybe_download_and_extract(data_url):
     data_url: Web location of the tar file containing the pretrained model.
   """
   dest_directory = FLAGS.model_dir
+  print(dest_directory)
   if not os.path.exists(dest_directory):
     os.makedirs(dest_directory)
   filename = data_url.split('/')[-1]
   filepath = os.path.join(dest_directory, filename)
+  print(filepath)
   if not os.path.exists(filepath):
 
     def _progress(count, block_size, total_size):
@@ -335,8 +343,8 @@ def maybe_download_and_extract(data_url):
     filepath, _ = urllib.request.urlretrieve(data_url, filepath, _progress)
     print()
     statinfo = os.stat(filepath)
-    tf.logging.info('Successfully downloaded', filename, statinfo.st_size,
-                    'bytes.')
+    tf.logging.info('Successfully downloaded %s %d bytes.' %
+                    (filename, statinfo.st_size))
   tarfile.open(filepath, 'r:gz').extractall(dest_directory)
 
 
@@ -1328,6 +1336,14 @@ if __name__ == '__main__':
       default='http://download.tensorflow.org/models/',
       help="""\
       Url to download models.\
+      """
+  )
+  parser.add_argument(
+      '--model_file_name',
+      type=str,
+      default=None,
+      help="""\
+      Name of the file after untar. Specify this if not common convention is followed.\
       """
   )
   FLAGS, unparsed = parser.parse_known_args()
